@@ -1,6 +1,12 @@
 # Pulseboard
 
-A small local dashboard built for the practical challenge. It pulls public mock data from [JSONPlaceholder](https://jsonplaceholder.typicode.com) and turns it into a quick operational overview.
+A small dashboard built for the practical challenge. It pulls public mock data from [JSONPlaceholder](https://jsonplaceholder.typicode.com) and turns it into a quick operational overview.
+
+## Live demo
+
+The dashboard is published with GitHub Pages:
+
+[https://pedroemanuel42.github.io/visionecommerce-api/](https://pedroemanuel42.github.io/visionecommerce-api/)
 
 ## What it shows
 
@@ -30,7 +36,11 @@ The dashboard calls these public endpoints directly from the browser:
 - `GET /posts`
 - `GET /todos`
 
-This version intentionally does not deploy anywhere. The local URL is the development delivery link for now. An internet connection is required because the mock data comes from JSONPlaceholder.
+An internet connection is required because the mock data comes from JSONPlaceholder.
+
+## Deployment
+
+GitHub Actions publishes the `public/` directory to GitHub Pages whenever changes are pushed to the `main` branch. The workflow is defined in `.github/workflows/deploy-pages.yml`.
 
 ## Implementation note
 
