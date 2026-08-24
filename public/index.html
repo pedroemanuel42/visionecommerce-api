@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pulseboard | Operational overview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root { --ink:#17201c; --muted:#738079; --paper:#f3f5ef; --panel:#fffef9; --line:#dce3d9; --lime:#c8ed61; --teal:#1e6c5b; --coral:#e98068; }
+    * { box-sizing:border-box; }
+    body { margin:0; color:var(--ink); background:var(--paper); font-family:Manrope, sans-serif; }
+    .shell { max-width:1180px; margin:auto; padding:30px 28px 48px; }
+    header { display:flex; align-items:flex-end; justify-content:space-between; gap:24px; margin-bottom:42px; }
+    .eyebrow { color:var(--teal); font:500 12px 'DM Mono', monospace; letter-spacing:0; text-transform:uppercase; }
+    h1 { font-size:clamp(30px, 5vw, 58px); line-height:1; letter-spacing:0; margin:12px 0 0; max-width:600px; }
+    h1 span { color:var(--teal); }
+    .subtle { color:var(--muted); font-size:14px; margin:14px 0 0; }
+    button { border:1px solid var(--ink); border-radius:3px; background:var(--lime); color:var(--ink); cursor:pointer; font:700 13px Manrope; padding:12px 17px; transition:transform .18s, box-shadow .18s; }
+    button:hover { transform:translate(-2px,-2px); box-shadow:4px 4px 0 var(--ink); }
+    button:disabled { cursor:wait; opacity:.6; }
+    .status { display:flex; align-items:center; gap:8px; color:var(--muted); font:12px 'DM Mono', monospace; margin-bottom:14px; }
+    .dot { width:8px; height:8px; border-radius:50%; background:var(--coral); }
+    .dot.live { background:#55a94b; }
+    .metrics { display:grid; grid-template-columns:repeat(3, 1fr); gap:14px; margin-bottom:28px; }
+    .metric { min-height:160px; border-top:3px solid var(--ink); background:var(--panel); padding:22px; }
+    .metric:nth-child(2) { border-color:var(--teal); }
+    .metric:nth-child(3) { border-color:var(--coral); }
+    .metric-label { color:var(--muted); font-size:13px; font-weight:700; }
+    .metric-value { font-size:48px; font-weight:800; letter-spacing:0; margin-top:22px; }
+    .metric-note { color:var(--muted); font-size:12px; margin-top:3px; }
+    .lower { display:grid; grid-template-columns:1.15fr .85fr; gap:14px; }
+    .panel { background:var(--panel); padding:24px; min-height:275px; }
+    .panel h2 { font-size:17px; margin:0 0 8px; }
+    .panel-intro { color:var(--muted); font-size:13px; margin:0 0 24px; }
+    .bar-row { display:grid; grid-template-columns:92px 1fr 40px; align-items:center; gap:12px; margin:18px 0; font-size:12px; }
+    .track { height:10px; background:#e6ebe1; overflow:hidden; }
+    .bar { height:100%; background:var(--teal); transition:width .6s ease; }
+    .bar.pending { background:var(--coral); }
+    .activity { border-top:1px solid var(--line); display:flex; justify-content:space-between; gap:12px; padding:15px 0; font-size:13px; }
+    .activity strong { display:block; font-size:12px; }
+    .activity small { color:var(--muted); }
+    .error { color:#a83e2c; background:#fff0ea; border:1px solid #efb09d; padding:14px; font-size:13px; }
+    footer { color:var(--muted); font:12px 'DM Mono', monospace; margin-top:28px; }
+    @media (max-width:700px) { .shell { padding:24px 18px 36px; } header { align-items:flex-start; flex-direction:column; margin-bottom:30px; } .metrics, .lower { grid-template-columns:1fr; } .metric { min-height:125px; } .metric-value { margin-top:14px; } }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div>
+        <div class="eyebrow">Pulseboard / local environment</div>
+        <h1>A quick read on your <span>ecosystem.</span></h1>
+        <p class="subtle">Public JSONPlaceholder data, refreshed on demand.</p>
+      </div>
+      <button id="refresh" type="button">Refresh data</button>
+    </header>
+
+    <div class="status"><i class="dot" id="dot"></i><span id="status">Connecting to source...</span></div>
+    <section class="metrics" aria-label="Key metrics">
+      <article class="metric"><div class="metric-label">Users in database</div><div class="metric-value" id="users">--</div><div class="metric-note">available profiles</div></article>
+      <article class="metric"><div class="metric-label">Posts in database</div><div class="metric-value" id="posts">--</div><div class="metric-note">available posts</div></article>
+      <article class="metric"><div class="metric-label">Completion rate</div><div class="metric-value" id="completion">--</div><div class="metric-note">completed tasks</div></article>
+    </section>
+
+    <section class="lower">
+      <article class="panel">
+        <h2>Task execution</h2>
+        <p class="panel-intro">Work distribution recorded by the API.</p>
+        <div class="bar-row"><span>Completed</span><div class="track"><div class="bar" id="done-bar" style="width:0%"></div></div><strong id="done">--</strong></div>
+        <div class="bar-row"><span>Pending</span><div class="track"><div class="bar pending" id="pending-bar" style="width:0%"></div></div><strong id="pending">--</strong></div>
+      </article>
+      <article class="panel">
+        <h2>Recent sample</h2>
+        <p class="panel-intro">Three signals from the same request.</p>
+        <div id="activity"><div class="activity"><span>Loading activity...</span></div></div>
+      </article>
+    </section>
+    <footer>Source: jsonplaceholder.typicode.com · Demo dashboard</footer>
+  </main>
+  <script>
+    const api = 'https://jsonplaceholder.typicode.com';
+    const $ = (id) => document.getElementById(id);
+    const format = new Intl.NumberFormat('en-US');
+
+    async function loadDashboard() {
+      const button = $('refresh');
+      button.disabled = true;
+      $('status').textContent = 'Fetching data...';
+      $('dot').classList.remove('live');
+      try {
+        const [users, posts, todos] = await Promise.all([
+          fetch(`${api}/users`).then((res) => res.json()),
+          fetch(`${api}/posts`).then((res) => res.json()),
+          fetch(`${api}/todos`).then((res) => res.json())
+        ]);
+        const completed = todos.filter((todo) => todo.completed).length;
+        const pending = todos.length - completed;
+        const rate = Math.round((completed / todos.length) * 100);
+        $('users').textContent = format.format(users.length);
+        $('posts').textContent = format.format(posts.length);
+        $('completion').textContent = `${rate}%`;
+        $('done').textContent = format.format(completed);
+        $('pending').textContent = format.format(pending);
+        $('done-bar').style.width = `${rate}%`;
+        $('pending-bar').style.width = `${100 - rate}%`;
+        $('activity').innerHTML = posts.slice(-3).reverse().map((post) => `<div class="activity"><span><strong>${post.title}</strong><small>post #${post.id}</small></span><span>→</span></div>`).join('');
+        $('status').textContent = `Updated now · ${todos.length} tasks analyzed`;
+        $('dot').classList.add('live');
+      } catch (error) {
+        $('status').textContent = 'Unable to refresh';
+        $('activity').innerHTML = '<div class="error">Check your connection and try again.</div>';
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    $('refresh').addEventListener('click', loadDashboard);
+    loadDashboard();
+  </script>
+</body>
+</html>
